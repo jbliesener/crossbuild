@@ -1,0 +1,49 @@
+diff -u 64/opensslconf.h universal/opensslconf.h
+--- 64/opensslconf.h	2017-12-03 16:57:34.080047323 -0200
++++ universal/opensslconf.h	2017-12-03 17:02:56.912761362 -0200
+@@ -121,8 +121,8 @@
+ 
+ #if !(defined(VMS) || defined(__VMS)) /* VMS uses logical names instead */
+ #if defined(HEADER_CRYPTLIB_H) && !defined(OPENSSLDIR)
+-#define ENGINESDIR "/usr/x86_64-apple-darwin14/lib/engines"
+-#define OPENSSLDIR "/usr/x86_64-apple-darwin14"
++#define ENGINESDIR "/usr/osxcross/SDK/MacOSX10.10.sdk/usr/lib/engines"
++#define OPENSSLDIR "/usr/osxcross/osxcross"
+ #endif
+ #endif
+ 
+@@ -168,20 +168,34 @@
+ /* If this is set to 'unsigned int' on a DEC Alpha, this gives about a
+  * %20 speed up (longs are 8 bytes, int's are 4). */
+ #ifndef DES_LONG
++#ifdef __LP64__
+ #define DES_LONG unsigned int
++#else
++#define DES_LONG unsigned long
++#endif
+ #endif
+ #endif
+ 
+ #if defined(HEADER_BN_H) && !defined(CONFIG_HEADER_BN_H)
+ #define CONFIG_HEADER_BN_H
++#ifdef __LP64__
+ #undef BN_LLONG
++#else
++#define BN_LLONG
++#endif
+ 
+ /* Should we define BN_DIV2W here? */
+ 
+ /* Only one for the following should be defined */
++#ifdef __LP64__
+ #define SIXTY_FOUR_BIT_LONG
+ #undef SIXTY_FOUR_BIT
+ #undef THIRTY_TWO_BIT
++#else
++#undef SIXTY_FOUR_BIT_LONG
++#undef SIXTY_FOUR_BIT
++#define THIRTY_TWO_BIT
++#endif
+ #endif
+ 
+ #if defined(HEADER_RC4_LOCL_H) && !defined(CONFIG_HEADER_RC4_LOCL_H)
