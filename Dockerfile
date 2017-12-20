@@ -17,7 +17,7 @@ ENV SDKVERSION MacOSX10.10.sdk
 ENV OSXSDK ${OSXCROSS}/SDK/${SDKVERSION}
 
 ENV MAKEOPTS -j 4
-ENV OPENSSL_CONFIG no-asm no-hw no-engine no-threads no-dso
+ENV OPENSSL_CONFIG no-asm no-hw no-engine no-threads no-dso no-ssl
 
 # openssl windows
 RUN set -x && \
@@ -35,36 +35,16 @@ RUN set -x && \
     cd .. && \
     rm -rf ${OPENSSL}
 
-# openssl osx
+# openssl linux
 RUN cd /usr/src && \
     tar -xzf ${OPENSSL}.tar.gz && \
     cd /usr/src/${OPENSSL} && \
-    RANLIB=${OSXCROSS}/bin/${OSX32}-ranlib ./Configure ${OPENSSL_CONFIG} --cross-compile-prefix=${OSXCROSS}/bin/${OSX32}- --prefix=/usr/${OSX32} --openssldir=/usr/${OSX32}/ darwin-i386-cc && \
+    ./Configure ${OPENSSL_CONFIG} linux-x86_64 --debug --prefix=/usr --openssldir=/usr && \
     make ${MAKEOPTS} && \
     make ${MAKEOPTS} install_sw && \
     make clean && \
-    RANLIB=${OSXCROSS}/bin/${OSX32}-ranlib ./Configure ${OPENSSL_CONFIG} --cross-compile-prefix=${OSXCROSS}/bin/${OSX64}- --prefix=/usr/${OSX64} --openssldir=/usr/${OSX64}/ darwin64-x86_64-cc && \
-    make ${MAKEOPTS} && \
-    make ${MAKEOPTS} install_sw && \
-    make clean 
-
-RUN cd /usr/src/${OPENSSL} && \
-    rm -rf ${OSXSDK}/usr/include/openssl && \
-    rm -f ${OSXSDK}/usr/lib/libcrypto.* && \
-    rm -f ${OSXSDK}/usr/lib/libssl.* && \
-    cp -r /usr/${OSX32}/include/openssl ${OSXSDK}/usr/include && \
-    cd ${OSXSDK}/usr/include/openssl && \ 
-    patch -p1 -i /usr/src/osxcross-dual-arch-opensslconf.h.patch && \
-    cd ${OSXSDK}/usr/lib && \
-    ${OSXCROSS}/bin/${OSX64}-libtool -static /usr/${OSX32}/lib/libcrypto.a /usr/${OSX64}/lib/libcrypto.a -o ${OSXSDK}/usr/lib/libcrypto.a && \
-    ${OSXCROSS}/bin/${OSX64}-libtool -static /usr/${OSX32}/lib/libssl.a /usr/${OSX64}/lib/libssl.a -o ${OSXSDK}/usr/lib/libssl.a
-    
-# openssl static linux
-RUN cd /usr/src/${OPENSSL} && \
-    ./Configure ${OPENSSL_CONFIG} linux-x86_64 --prefix=/usr --openssldir=/usr && \
-    make ${MAKEOPTS} && \
-    make ${MAKEOPTS} install_sw && \
-    make clean
+    cd .. && \
+    rm -rf ${OPENSSL}
 
 # regex windows
 RUN cd /usr/src && \
@@ -101,4 +81,29 @@ RUN apt-get -y --no-install-recommends install \
 	libglu1-mesa-dev \
 	mesa-common-dev 
 
+# openssl osx
+RUN cd /usr/src && \
+    tar -xzf ${OPENSSL}.tar.gz && \
+    cd /usr/src/${OPENSSL} && \
+    RANLIB=${OSXCROSS}/bin/${OSX32}-ranlib ./Configure ${OPENSSL_CONFIG} no-shared --cross-compile-prefix=${OSXCROSS}/bin/${OSX32}- --prefix=/usr/${OSX32} --openssldir=/usr/${OSX32}/ darwin-i386-cc && \
+    make ${MAKEOPTS} && \
+    make ${MAKEOPTS} install_sw && \
+    make clean && \
+    RANLIB=${OSXCROSS}/bin/${OSX64}-ranlib ./Configure ${OPENSSL_CONFIG} no-shared --cross-compile-prefix=${OSXCROSS}/bin/${OSX64}- --prefix=/usr/${OSX64} --openssldir=/usr/${OSX64}/ darwin64-x86_64-cc && \
+    make ${MAKEOPTS} && \
+    make ${MAKEOPTS} install_sw && \
+    make clean 
+
+
+RUN cd /usr/src/${OPENSSL} && \
+    rm -rf ${OSXSDK}/usr/include/openssl && \
+    rm -f ${OSXSDK}/usr/lib/libcrypto.* && \
+    rm -f ${OSXSDK}/usr/lib/libssl.* && \
+    cp -r /usr/${OSX32}/include/openssl ${OSXSDK}/usr/include && \
+    cd ${OSXSDK}/usr/include/openssl && \
+    patch -p1 -i /usr/src/osxcross-dual-arch-opensslconf.h.patch && \
+    cd ${OSXSDK}/usr/lib && \
+    ${OSXCROSS}/bin/${OSX64}-libtool -static /usr/${OSX32}/lib/libcrypto.a /usr/${OSX64}/lib/libcrypto.a -o ${OSXSDK}/usr/lib/libcrypto.a && \
+    ${OSXCROSS}/bin/${OSX64}-libtool -static /usr/${OSX32}/lib/libssl.a /usr/${OSX64}/lib/libssl.a -o ${OSXSDK}/usr/lib/libssl.a
+    
 
