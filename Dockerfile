@@ -24,6 +24,7 @@ ENV LANG C.UTF-8
 # Java
 RUN apt-get update && apt-get install -y --no-install-recommends \
 		bzip2 \
+		zip \
 		unzip \
 		xz-utils
 
